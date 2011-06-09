@@ -114,7 +114,7 @@ printf("%d / %d\n", currhost, numhosts);
 				{
 				 	/* Can't connect to tcp host */
 					/* check the dep */
-					if (tcpprobe("www.apple.com", 80) == 1)
+					if (tcpprobe("www.google.ca", 80) == 1)
 					{
 						/* can't connect to dep, don't count this */
 						continue;
@@ -228,6 +228,7 @@ printf("%d / %d\n", currhost, numhosts);
 		{
 			/* this is the child process */
 			usleep(50); /*sleep for 50 ms to fake a GET */
+
 			if(write(new_fd, HTML_HEADER,strlen(HTML_HEADER)) == -1)
 			{
 				perror("send");
@@ -235,26 +236,30 @@ printf("%d / %d\n", currhost, numhosts);
 
 			for (j = 0; j <= numhosts; j++)
 			{
-				bufout[0] = NULL;
-				/*sprintf(bufout, "<tr><td>%s</td><td>%s</td>
-					<td>%s</td><td>good</td></tr>\n",
-					names[j], ips[j], ports[j]); */
-				strcat(bufout, "<tr><td>");
-				strcat(bufout, names[j]);
-				strcat(bufout, "</td><td>");
-				strcat(bufout, ips[j]);
-				strcat(bufout, "</td><td>");
-				sprintf(bufout, "%s%d", bufout, ports[j]);
-				strcat(bufout, "</td>");
-				switch (mmap_ptr[j * MAX_SHARE_MEM_ELEMENT])
+				bufout[0] = ' ';
+				bufout[1] = 0;
+
+				if (j % 6 == 0)
 				{
-					case UP_ID : strcat(bufout, "<td bgcolor=#00FF00>ALIVE");
-						break;
-					case DOWN_ID : strcat(bufout, "<td bgcolor=#FF0000>DOWN");
-						break;
-					default : strcat(bufout, "<td>UNKNOWN");
+					strcat(bufout, "</tr><tr>");
 				}
-				strcat(bufout, "</td><td>");
+
+				switch (mmap_ptr[j * MAX_SHARE_MEM_ELEMENT])
+                                {
+                                        case UP_ID : strcat(bufout, "<td bgcolor=#254117>");
+                                                break;
+                                        case DOWN_ID : strcat(bufout, "<td bgcolor=#C11B17>");
+                                                break;
+                                        default : strcat(bufout, "<td>");
+                                }
+
+				strcat(bufout, "<table><tr><td>");
+				//strcat(bufout, names[j]);
+				strncat(bufout, names[j], 16);
+				strcat(bufout, "</td></tr><tr><td>");
+				strcat(bufout, ips[j]);
+				sprintf(bufout, ":%s%d", bufout, ports[j]);
+				strcat(bufout, "</td></tr><tr><td>");
 				/* print out the date col */
 				if (mmap_ptr[(j * MAX_SHARE_MEM_ELEMENT) + 10] == 0)
 				{
@@ -273,7 +278,7 @@ printf("%d / %d\n", currhost, numhosts);
 						sprintf(bufout, "%s%c", bufout, mmap_ptr[(j * MAX_SHARE_MEM_ELEMENT) + 10 + i]);
 					}
 				}
-				strcat(bufout, "</td><td>");
+				strcat(bufout, "</td></tr><tr><td>");
 
 				/* calculate the % uptime */
 				uptime = 100 - ((float)mmap_ptr[(j * MAX_SHARE_MEM_ELEMENT) + 6] / (float)mmap_ptr[(j * MAX_SHARE_MEM_ELEMENT) + 2] * 100.0);
@@ -283,17 +288,17 @@ printf("%d / %d\n", currhost, numhosts);
 				}
 				sprintf(bufout, "%s%f%", bufout, uptime);
 
-				strcat(bufout, "</td></tr>");
+				strcat(bufout, "</td></tr></table></td>\n");
 				if(write(new_fd, bufout, strlen(bufout)) == -1)
 				{
 					perror("send");
 				}
 			}
 			
-			if(write(new_fd, HTML_FOOTER,strlen(HTML_FOOTER)) == -1)
+			/*if(write(new_fd, HTML_FOOTER,strlen(HTML_FOOTER)) == -1)
 			{
 				perror("send");
-			}
+			}*/
 			close(new_fd);
 			exit(ERROR_NONE);
 		}

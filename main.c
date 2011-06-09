@@ -17,6 +17,8 @@
 #define RPC_PORT 8234 /* TCP port that the rpc client runs on */
 #define EMAIL_FROM "nj@telin.com"
 
+#define HTML_HEADER "<html><head><title></title></head><body bgcolor=black text=white link=white vlink=white alink=while><table border=3><tr><td></td>\n"
+
 /* Do not modify after this line */
 
 #include <stdio.h>
@@ -65,10 +67,6 @@
 #define BACKLOG 10     /* how many pending connections queue will hold */
 #define MAXDATASIZE 1000 /* max number of bytes we can get at once */
 
-#define HTML_HEADER "<html><head><title>Status</title></head> \
-			<body><table border=1><tr><td>Name</td><td>IP address</td><td>port</td><td>status</td><td>Time of last probe</td><td>% Up Time</td></tr>\n"
-#define HTML_FOOTER "</table></body>\n"
-
 char *rpcget(char *hostname, int port);
 
 /* Global Varibles */
@@ -110,16 +108,16 @@ int main(int argc, char **argv)
 
 	printf("Pingbox Version 2.1 - by Nicholas Janzen (nj@third-net.com)\n\n");
 
-	if (argc != 2) /* check for 1 arg, port number */
+	if (argc != 3) /* check for 1 arg, port number */
         {
-                printf("Please invoke this program %s <port>\n", argv[0]);
+                printf("Please invoke this program %s <port> <conf_file>\n", argv[0]);
                 exit(ERROR_ARG);
         }
 
 	lport = atoi(argv[1]); /* port to listen on */
 
 	/* read in conf.txt - loading all of the data */
-	fid = readconf("conf.txt");
+	fid = readconf(argv[2]);
 
 	/* infininte lopp */
 	sys_fork(lport, fid);
