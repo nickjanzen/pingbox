@@ -258,7 +258,7 @@ printf("%d / %d\n", currhost, numhosts);
 				strncat(bufout, names[j], 16);
 				strcat(bufout, "</td></tr><tr><td>");
 				strcat(bufout, ips[j]);
-				sprintf(bufout, ":%s%d", bufout, ports[j]);
+				sprintf(bufout, "%s:%d", bufout, ports[j]);
 				strcat(bufout, "</td></tr><tr><td>");
 				/* print out the date col */
 				if (mmap_ptr[(j * MAX_SHARE_MEM_ELEMENT) + 10] == 0)

@@ -1,0 +1,17 @@
+Web 209.115.237.66 80 1 router plist
+RA 209.115.237.69 22 1 router plist
+Phone 192.168.0.49 80 1 router plist
+TS109 192.168.0.109 3389 1 router plist
+TS106 192.168.0.106 3389 1 router plist
+TS104 192.168.0.104 3389 1 router plist
+TS98 192.168.0.98 3389 1 router plist
+Mediplan77 192.168.0.77 22 1 router plist
+Mediplan88 192.168.0.88 22 1 router plist
+Mediplan110 192.168.0.110 22 1 router plist
+Mediplan74 192.168.0.74 22 1 router plist
+TelinNAS 192.168.0.114 80 1 router plist
+Security 192.168.0.101 22 1 router plist
+flora 192.168.0.91 80 1 router plist
+floradev 192.168.0.90 80 1 router plist
+stats 192.168.0.105 80 1 router plist
+Google	www.google.ca 80 1 router plist
