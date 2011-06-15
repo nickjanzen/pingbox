@@ -1,18 +1,20 @@
+#define MAX_EMAIL_LEN 2000
+
 /***************************************************************
 * email() takes a int type, a string name, and email addresses *
 * No need to modify unless /usr/bin/mail is elsewhere          *
 ****************************************************************/
 int email(int type, char *name, char *addr)
 {
-        char msgf[2000]; /* varible for building the email */
+        char msgf[MAX_EMAIL_LEN]; /* varible for building the email */
 
         if (type == DOWN_ID)
         {
-                sprintf(msgf, "/bin/echo '\n' | /usr/bin/mail -s 'PB: Down -> %s' %s \n", name, addr);
+                snprintf(msgf, MAX_EMAIL_LEN, "/bin/echo '\n' | /usr/bin/mail -s 'PB: Down -> %s' %s \n", name, addr);
         }
         else if (type == UP_ID)
         {
-                sprintf(msgf, "/bin/echo '\n' | /usr/bin/mail -s 'PB: Alive -> %s' %s \n", name, addr);
+                snprintf(msgf, MAX_EMAIL_LEN, "/bin/echo '\n' | /usr/bin/mail -s 'PB: Alive -> %s' %s \n", name, addr);
         }
 
         system(msgf);
@@ -55,11 +57,11 @@ int email1(int type, char *name, char *addr)
 
         if (type == DOWN_ID)
         {
-                sprintf(msgf, "Subject: PB: Down -> %s \n", name);
+                snprintf(msgf, MAX_EMAIL_LEN, "Subject: PB: Down -> %s \n", name);
         }
         else if (type == UP_ID)
         {
-                sprintf(msgf, "Subject: PB: Alive -> %s \n", name);
+                snprintf(msgf, MAX_EMAIL_LEN, "Subject: PB: Alive -> %s \n", name);
         }
 
 

@@ -1,3 +1,8 @@
+struct tvi {
+        u_int   tv_sec;
+        u_int   tv_usec;
+};
+
 int sys_fork(int lport, int fid)
 {
 	int i, j, k, currhost; /* counting varibles */
@@ -20,6 +25,11 @@ int sys_fork(int lport, int fid)
 	caddr_t mmap_ptr; /* last known status of each entry */
 	/* this varible is in this shape n + 0 = status n + 10 
 		= first char of rpc, max rpc len = 88 */
+
+	/* timer variables */
+	struct tvi tvi;
+        struct timeval tv, tp;
+        quad_t triptime = 0;
 
 	if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) == -1)
 	{
@@ -87,29 +97,23 @@ printf("%d / %d\n", currhost, numhosts);
 				currhost++;
 			}
 
-			/* grab current time so this event can be logged */
-			(void)time(&nowp);
-			(void)strftime(timebuf, sizeof(timebuf) - 1, "%c", localtime(&nowp));
-			timebuf[sizeof(timebuf) - 1] = '\0';
-
 			for (i = 0; i < MAX_TIME_LEN; i++)
 			{
 				/* loop through the buff, and stick it */
-				mmap_ptr[(currhost * MAX_SHARE_MEM_ELEMENT) + 10 + i] = timebuf[i];
-
-				if (timebuf[i] == 0)
-				{
-					break;
-				}
+				mmap_ptr[(currhost * MAX_SHARE_MEM_ELEMENT) + 10 + i] = 0;
 			}
 
 			if (ports[currhost] == 0) /* icmp probe */
 			{
+				//TODO
 				continue;
 			}
 			else /* tcp probe */
 			{
 				printf("- tcpprobe: %s port: %d", ips[currhost], ports[currhost]);
+
+				// clear timer
+				(void)gettimeofday(&tp, (struct timezone *)NULL);
 				if (tcpprobe(ips[currhost], ports[currhost]) == 1)
 				{
 				 	/* Can't connect to tcp host */
@@ -147,30 +151,12 @@ printf("%d / %d\n", currhost, numhosts);
 							}
 						}
 					}
+					
 					printf(" DOWN\n");
 				}
 				else
 				{
 					/* Can connect to tcp host */
-					//if (rpcget(ips[currhost], RPC_PORT) == NULL)
-					//{
-					//	/* no rpc data avail */
-					//	mmap_ptr[(currhost * MAX_SHARE_MEM_ELEMENT) + 10] = 0;
-					//}
-					//else
-					//{
-					//	/* we got some rpc data */
-					//	for (i = 0; i < MAX_RPC_LEN; i++)
-					//	{
-					//		/* loop through rpc data, and stick it */
-					//		mmap_ptr[(currhost * MAX_SHARE_MEM_ELEMENT) + 10 + i] = rpc_buff[i];
-					//		if (rpc_buff[i] == '|')
-					//		{
-					//			break;
-					//		}
-					//	}
-					//}
-
 					/* count this in the status shared memory */
 					mmap_ptr[currhost * MAX_SHARE_MEM_ELEMENT + 2]++;
 
@@ -191,6 +177,11 @@ printf("%d / %d\n", currhost, numhosts);
 					numberdown2[currhost] = 0;
 					printf(" UP\n");
 				}
+					(void)gettimeofday(&tv, (struct timezone *)NULL);
+					timersub(&tv, &tp, &tv);
+					triptime = (tv.tv_sec * 1000000) + tv.tv_usec;
+					snprintf(timebuf, MAX_TIME_LEN, "%d.%03d ms\n", (int)(triptime / 1000), (int)(triptime % 1000));
+					strncpy(&mmap_ptr[(currhost * MAX_SHARE_MEM_ELEMENT) + 10], timebuf, MAX_TIME_LEN);
 			}
                 }
 		close(fid); /* close the mmap file */
@@ -241,30 +232,30 @@ printf("%d / %d\n", currhost, numhosts);
 
 				if (j % 6 == 0)
 				{
-					strcat(bufout, "</tr><tr>");
+					strlcat(bufout, "</tr><tr>", MAXDATASIZE);
 				}
 
 				switch (mmap_ptr[j * MAX_SHARE_MEM_ELEMENT])
                                 {
-                                        case UP_ID : strcat(bufout, "<td bgcolor=#254117>");
+                                        case UP_ID : strlcat(bufout, "<td bgcolor=#254117>", MAXDATASIZE);
                                                 break;
-                                        case DOWN_ID : strcat(bufout, "<td bgcolor=#C11B17>");
+                                        case DOWN_ID : strlcat(bufout, "<td bgcolor=#C11B17>", MAXDATASIZE);
                                                 break;
-                                        default : strcat(bufout, "<td>");
+                                        default : strlcat(bufout, "<td>", MAXDATASIZE);
                                 }
 
-				strcat(bufout, "<table><tr><td>");
-				//strcat(bufout, names[j]);
-				strncat(bufout, names[j], 16);
-				strcat(bufout, "</td></tr><tr><td>");
-				strcat(bufout, ips[j]);
-				sprintf(bufout, "%s:%d", bufout, ports[j]);
-				strcat(bufout, "</td></tr><tr><td>");
+				strlcat(bufout, "<table><tr><td>", MAXDATASIZE);
+				//strlcat(bufout, names[j], MAXDATASIZE);
+				strlcat(bufout, names[j], MAXDATASIZE);
+				strlcat(bufout, "</td></tr><tr><td>", MAXDATASIZE);
+				strlcat(bufout, ips[j], MAXDATASIZE);
+				snprintf(bufout, MAXDATASIZE, "%s:%d", bufout, ports[j]);
+				strlcat(bufout, "</td></tr><tr><td>", MAXDATASIZE);
 				/* print out the date col */
 				if (mmap_ptr[(j * MAX_SHARE_MEM_ELEMENT) + 10] == 0)
 				{
 					/* no date data for this host */
-					strcat(bufout, "n/a");
+					strlcat(bufout, "n/a", MAXDATASIZE);
 				}
 				else
 				{
@@ -275,10 +266,10 @@ printf("%d / %d\n", currhost, numhosts);
 							/* end of output */
 							break;
 						}
-						sprintf(bufout, "%s%c", bufout, mmap_ptr[(j * MAX_SHARE_MEM_ELEMENT) + 10 + i]);
+						snprintf(bufout, MAXDATASIZE, "%s%c", bufout, mmap_ptr[(j * MAX_SHARE_MEM_ELEMENT) + 10 + i]);
 					}
 				}
-				strcat(bufout, "</td></tr><tr><td>");
+				strlcat(bufout, "</td></tr><tr><td>", MAXDATASIZE);
 
 				/* calculate the % uptime */
 				uptime = 100 - ((float)mmap_ptr[(j * MAX_SHARE_MEM_ELEMENT) + 6] / (float)mmap_ptr[(j * MAX_SHARE_MEM_ELEMENT) + 2] * 100.0);
@@ -286,19 +277,29 @@ printf("%d / %d\n", currhost, numhosts);
 				{
 					uptime = 0.00;
 				}
-				sprintf(bufout, "%s%f%", bufout, uptime);
+				snprintf(bufout, MAXDATASIZE, "%s%f%", bufout, uptime);
 
-				strcat(bufout, "</td></tr></table></td>\n");
+				strlcat(bufout, "</td></tr></table></td>\n", MAXDATASIZE);
 				if(write(new_fd, bufout, strlen(bufout)) == -1)
 				{
 					perror("send");
 				}
 			}
+
+			/* grab current time so this event can be logged */
+			(void)time(&nowp);
+			(void)strftime(timebuf, sizeof(timebuf) - 1, "%c", localtime(&nowp));
+			timebuf[sizeof(timebuf) - 1] = '\0';
 			
-			/*if(write(new_fd, HTML_FOOTER,strlen(HTML_FOOTER)) == -1)
+			if(write(new_fd, timebuf, strlen(timebuf)) == -1)
 			{
 				perror("send");
-			}*/
+			}
+
+			if(write(new_fd, HTML_FOOTER,strlen(HTML_FOOTER)) == -1)
+			{
+				perror("send");
+			}
 			close(new_fd);
 			exit(ERROR_NONE);
 		}

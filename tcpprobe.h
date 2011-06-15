@@ -48,7 +48,7 @@ int sendrecvcmd(int sockfd, char *fname)
 
 	usleep(10);
 
-	strcpy(s2, "");
+	strncpy(s2, "", 2);
 
 	while(strlen(s2) < (1024 * 128) && (state < 6))
 	{
