@@ -218,7 +218,17 @@ printf("%d / %d\n", currhost, numhosts);
 		if (!fork())
 		{
 			/* this is the child process */
-			usleep(50); /*sleep for 50 ms to fake a GET */
+			//usleep(75); /*sleep for 50 ms to fake a GET */
+
+			
+			if(j == read(new_fd, buf, MAXDATASIZE) == -1)
+			{
+				perror("read");
+			}
+
+			buf[j-1] = 0; // null terminate string
+
+			printf("%s\n\n", buf);
 
 			if(write(new_fd, HTML_HEADER,strlen(HTML_HEADER)) == -1)
 			{

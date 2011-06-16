@@ -12,12 +12,12 @@
 
 /* User Configurable Options */
 
-#define DELAY_BETWEEN 100 /* time between each ping */
+#define DELAY_BETWEEN 10 /* time between each ping */
 #define SMTP_SERVER "127.0.0.1"
 #define RPC_PORT 8234 /* TCP port that the rpc client runs on */
 #define EMAIL_FROM "nj@telin.com"
 
-#define HTML_HEADER "<html><head><title></title></head><body bgcolor=black text=white link=white vlink=white alink=while><table border=3><tr><td></td>\n"
+#define HTML_HEADER "<html><head><title>Monitoring</title></head><body bgcolor=black text=white link=white vlink=white alink=while><table border=3><tr><td></td>\n"
 #define HTML_FOOTER "</table></html>\n"
 
 /* Do not modify after this line */
@@ -94,10 +94,10 @@ int numhosts;
 #include "email.h"
 #include "sys_fork.h"
 
-/*int main()
+void userterm(int sig_num)
 {
-	tcpprobe("209.115.237.66", 80);
-}*/
+	exit(0);
+}
 
 /* Main function - */
 int main(int argc, char **argv)
@@ -106,6 +106,11 @@ int main(int argc, char **argv)
 
 	int lport; /* port to listen on */
 	int fid; /* file descriptor for shared mem */
+
+	signal(SIGHUP, userterm);
+	signal(SIGINT, userterm);
+	signal(SIGQUIT, userterm);
+	signal(SIGKILL, userterm);
 
 	printf("Pingbox Version 2.1 - by Nicholas Janzen (nj@third-net.com)\n\n");
 
